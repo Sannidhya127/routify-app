@@ -1,0 +1,25 @@
+.navbar{
+    padding: 10px 10px 10px 30px ;
+    font-size: large;
+    background-color: rgb(105, 191, 52);
+    border-radius: 40px;
+}
+.contact,.FAQS{
+    padding-left:100px;
+    text-decoration: none;
+    color: black;
+
+}
+.home{
+ padding-left:800px;
+ text-decoration: none;
+ color: black;
+}
+
+.home:hover,.contact:hover,.FAQS:hover{
+    font-weight: 900;
+    font-size:x-large;
+    color:rgb(49, 109, 168);
+    transition:ease-out 300ms;
+}
+
