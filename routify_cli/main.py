@@ -6,6 +6,7 @@ from prompt_toolkit import Application
 from prompt_toolkit.shortcuts import ProgressBar
 from rich.console import Console
 from prompt_toolkit.layout.dimension import D
+from blessed import Terminal
 from prompt_toolkit import Application
 from prompt_toolkit import Application
 from prompt_toolkit.buffer import Buffer
@@ -118,6 +119,7 @@ def CheckLogin():
         return True
 
 def MainWin():
+
     if CheckLogin():
         pass
     else:
@@ -144,21 +146,83 @@ def print_ascii_art():
     {attr(0)}"""
     print(ascii_art)
 
+
+def PromptSegment(term):
+    with term.location(x=0, y=0):
+        print_ascii_art()
+        # os.system("color ef")
+        print("Type help for some help")
+        while True:
+            cmd = Prompt.ask(f"{fg('green_1')}Routify>> {attr(0)}")
+            if cmd == "exit":
+                exit()
+            elif cmd == "r --login":
+                CheckLogin()
+            elif cmd[0::5] == 'login':
+                login(cmd)
+            elif cmd == "r --new":
+                pass
+
+def Other():
+    with term.location(x=term.width // 2, y=0):
+        print(term.center("Code Segment 2"))
+    # Your code for segment 2 here
+    time.sleep(2) 
+
+def run_in_segment(func):
+    with term.cbreak(), term.hidden_cursor():
+        func()
+
+def main():
+    with term.fullscreen():
+        with term.location():
+            print(term.clear())
+            # Split the console into two segments
+            thread1 = threading.Thread(target=run_in_segment, args=(PromptSegment))
+            thread2 = threading.Thread(target=run_in_segment, args=(Other))
+            thread1.start()
+            thread2.start()
+            thread1.join()
+            thread2.join()
+
+ 
+def NewRoutine():
+    tasks = [] 
+    slots = []
+    days = []
+    no_sub = int(input("Enter the number of tasks: "))
+    for i in range(no_sub):
+        task = input(f"Enter task {i+1}: ")
+        tasks.append(task)
+    print(f"Recieved task data: {tasks}")
+    t_slot_n = int(input("Enter the number of time slots: "))
+    for i in range(t_slot_n):
+        slot = input(f"Enter time slot {i+1}: ")
+        slots.append(slot)
+    print(f"Recieved time slot data: {slots}")
+    n_days = int(input("Enter the number of days: "))
+    for i in range(n_days):
+        day = input(f"Enter day {i+1}: ")
+        days.append(day)
+    print(f"Recieved day data: {days}")
+
+    # Create the matrix
+    matrix = [['0'] + days]
+    for i in range(len(slots)):
+        matrix.append([slots[i]] + tasks)
+
+    print(matrix)
+
+
 if __name__ == '__main__':
     # Splash Screen launched
-
     Screen.wrapper(splash_screen)
-    print_ascii_art()
-    print("Type help for some help")
-    while True:
-        cmd = Prompt.ask(f"{fg('green_1')}Routify>> {attr(0)}")
-        if cmd == "exit":
-            exit()
-        elif cmd == "r --login":
-            CheckLogin()
-        elif cmd[0::5] == 'login':
-            login(cmd)
-        elif cmd == "r --new":
-            pass
+    term = Terminal()
+    main()
+    cmd = input("routify>> ")
+    if cmd == "exit":
+        exit()
+    elif cmd == 'new':
+        NewRoutine()
  
         

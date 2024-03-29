@@ -1,27 +1,37 @@
-import sys
+from blessed import Terminal
+import threading
+import time
 
-# ANSI escape codes for neon background colors
-NEON_COLORS = {
-    'black': '\033[40;38;5;82m',
-    'red': '\033[41;38;5;198m',
-    'green': '\033[42;38;5;118m',
-    'yellow': '\033[43;38;5;226m',
-    'blue': '\033[44;38;5;81m',
-    'magenta': '\033[45;38;5;201m',
-    'cyan': '\033[46;38;5;51m',
-    'white': '\033[47;38;5;231m',
-}
+# Initialize Blessed terminal
+term = Terminal()
 
-# Neon text color
-NEON_TEXT_COLOR = '\033[38;5;16m'
+def code_segment1():
+    with term.location(x=0, y=0):
+        print(term.center("Code Segment 1"))
+    # Your code for segment 1 here
+    time.sleep(2)  # Simulate some work
 
-def print_neon(text, neon_color='white', text_color='blue'):
-    neon_code = NEON_COLORS.get(neon_color, NEON_COLORS['white'])
-    text_color_code = NEON_COLORS.get(text_color, NEON_COLORS['blue'])
-    reset_code = '\033[0m'
-    print(neon_code + text_color_code + text + reset_code)
+def code_segment2():
+    with term.location(x=term.width // 2, y=0):
+        print(term.center("Code Segment 2"))
+    # Your code for segment 2 here
+    time.sleep(2)  # Simulate some work
 
-# Example usage
+def run_in_segment(func):
+    with term.cbreak(), term.hidden_cursor():
+        func()
+
+def main():
+    with term.fullscreen():
+        with term.location():
+            print(term.clear())
+            # Split the console into two segments
+            thread1 = threading.Thread(target=run_in_segment, args=(code_segment1,))
+            thread2 = threading.Thread(target=run_in_segment, args=(code_segment2,))
+            thread1.start()
+            thread2.start()
+            thread1.join()
+            thread2.join()
+
 if __name__ == "__main__":
-    text = "Neon Background"
-    print_neon(text)
+    main()
