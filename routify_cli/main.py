@@ -289,22 +289,44 @@ def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
 import numpy as np
 
 def calculate_efficiency(routine, task_priorities, slot_priorities):
-    # Convert routine matrix to numpy array
-    routine_matrix = np.array([row[1:] for row in routine])
+    # Initialize efficiency score
+    efficiency_score = 0
 
-    # Extract task and slot priorities in the correct order
-    task_priorities_list = [task_priorities[task] for row in routine for task in row[1:]]
-    slot_priorities_list = [slot_priorities[row[0]] for row in routine]
+    # Create a set to store the task-slot combinations that have been counted
+    counted_combinations = set()
 
-    # Convert task priorities and slot priorities to numpy arrays
-    task_priorities_vector = np.array(task_priorities_list)
-    slot_priorities_vector = np.array(slot_priorities_list)
+    # Iterate over each row in the routine
+    for row in routine:
+        # Get the slot priority
+        slot_priority = slot_priorities.get(row[0], 0)
 
-    # Compute efficiency score using linear algebra operations
-    efficiency_score = np.sum(np.dot(routine_matrix, task_priorities_vector) * slot_priorities_vector)
-    
+        # Iterate over each task in the row
+        for task in row[1:]:
+            # Get the task priority
+            task_priority = task_priorities.get(task, 0)
+
+            # Create a tuple representing the task-slot combination
+            combination = (task, row[0])
+
+            # Check if the combination has already been counted
+            if combination not in counted_combinations:
+                # Add the product of the task priority and the slot priority to the efficiency score
+                efficiency_score += task_priority * slot_priority
+
+                # Add the combination to the set of counted combinations
+                counted_combinations.add(combination)
+
     return efficiency_score
+def calculate_max_efficiency(task_priorities, slot_priorities):
+    # Get the maximum task priority and the maximum slot priority
+    max_task_priority = max(task_priorities.values())
+    max_slot_priority = max(slot_priorities.values())
 
+    # The maximum possible score is the product of the maximum task priority, the maximum slot priority, 
+    # and the minimum between the number of tasks and the number of slots
+    max_efficiency_score = max_task_priority * max_slot_priority * min(len(task_priorities), len(slot_priorities))
+
+    return max_efficiency_score
 if __name__ == '__main__':
     # Splash Screen launched
     Screen.wrapper(splash_screen)
@@ -316,6 +338,13 @@ if __name__ == '__main__':
     elif cmd == 'new':
         nr = NewRoutine(1,2)
         print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
-        # print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
- 
+        print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
+        print(f'Maximum possible efficiency score: {calculate_max_efficiency(nr[1], nr[2])}')
+        print(f"Efficiency percentage: {calculate_efficiency(nr[0], nr[1], nr[2]) / calculate_max_efficiency(nr[1], nr[2]) * 100:.2f}%")
+        efficiency_score = calculate_efficiency(nr[0], nr[1], nr[2])
+        max_efficiency_score = calculate_max_efficiency(nr[1], nr[2])
+        normalized_efficiency_score = efficiency_score / max_efficiency_score
+        normalized_efficiency_score = efficiency_score / max_efficiency_score
+        print(f"Efficiency score: {efficiency_score}")
+        print(f"Normalized efficiency score: {normalized_efficiency_score}")
         
