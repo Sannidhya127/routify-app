@@ -186,33 +186,103 @@ def main():
             thread2.join()
 
  
+import heapq
+
 def NewRoutine():
     tasks = [] 
     slots = []
     days = []
+    tp = {}
+    sp = {}
     no_sub = int(input("Enter the number of tasks: "))
     for i in range(no_sub):
         task = input(f"Enter task {i+1}: ")
-        tasks.append(task)
-    print(f"Recieved task data: {tasks}")
+        task_priority = int(input(f"Enter priority for task {i+1}: "))
+        tasks.append((-task_priority, task))
+        if task_priority not in tp:
+            tp[task] = task_priority # Store tasks as (-priority, task)
+    original_tasks = list(tasks)  # Keep a copy of the original tasks list
+    heapq.heapify(tasks)  # Turn tasks list into a heap
+    print(f"Received task data: {tasks}")
     t_slot_n = int(input("Enter the number of time slots: "))
     for i in range(t_slot_n):
         slot = input(f"Enter time slot {i+1}: ")
-        slots.append(slot)
-    print(f"Recieved time slot data: {slots}")
+        slot_priority = int(input(f"Enter priority for slot {i+1}: "))
+        slots.append((-slot_priority, slot))  # Store slots as (-priority, slot)
+        if slot_priority not in sp:
+            sp[slot] = slot_priority
+    heapq.heapify(slots)  # Turn slots list into a heap
+    print(f"Received time slot data: {slots}")
     n_days = int(input("Enter the number of days: "))
     for i in range(n_days):
         day = input(f"Enter day {i+1}: ")
         days.append(day)
-    print(f"Recieved day data: {days}")
-
+    print(f"Received day data: {days}")
+    
     # Create the matrix
+    
     matrix = [['0'] + days]
-    for i in range(len(slots)):
-        matrix.append([slots[i]] + tasks)
+    while slots:
+        slot_priority, slot = heapq.heappop(slots)  # Pop slot with highest priority
+        row = [slot]
+        for _ in days:
+            if not tasks:  # Check if there are no tasks left
+                tasks = list(original_tasks)  # Re-heapify tasks from the original list
+                heapq.heapify(tasks)
+            task_priority, task = heapq.heappop(tasks)  # Pop task with highest priority
+            row.append(task)
+        matrix.append(row)
 
-    print(matrix)
+    # Print the matrix
+    for row in matrix:
+        print('\t'.join(str(element) for element in row))
+    
+    return matrix, tp, sp
 
+def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
+    priority_matrix = []
+    for i, row in enumerate(matrix):
+        if i == 0:  # Skip the first row (the days)
+            continue
+        priority_row = [row[0]]  # Copy the time slot
+        for task in row[1:]:
+            if task == 'No task':
+                task_priority = 0
+            else:
+                task_priority = task_priorities[task]
+            slot_priority = slot_priorities[row[0]]
+            priority_row.append((task_priority, slot_priority))
+        priority_matrix.append(priority_row)
+    return priority_matrix
+
+
+import numpy as np
+
+def calculate_efficiency(routine):
+    # Map tasks to numerical values
+    task_mapping = {}
+    numerical_routine = []
+    numerical_value = 1
+
+    for row in routine[1:]:
+        numerical_row = []
+        for task in row[1:]:
+            if task not in task_mapping:
+                task_mapping[task] = numerical_value
+                numerical_value += 1
+            numerical_row.append(task_mapping[task])
+        numerical_routine.append(numerical_row)
+
+    # Convert routine matrix to numpy array
+    routine_matrix = np.array(numerical_routine)
+
+    # Perform Singular Value Decomposition
+    U, sigma, Vt = np.linalg.svd(routine_matrix)
+
+    # Calculate efficiency score (example metric: sum of singular values)
+    efficiency_score = np.sum(sigma)
+
+    return efficiency_score
 
 if __name__ == '__main__':
     # Splash Screen launched
@@ -223,6 +293,8 @@ if __name__ == '__main__':
     if cmd == "exit":
         exit()
     elif cmd == 'new':
-        NewRoutine()
+        nr = NewRoutine()
+        print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
+        print(f"Efficiency score: {calculate_efficiency(nr)}")
  
         
