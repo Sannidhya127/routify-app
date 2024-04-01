@@ -295,6 +295,6 @@ if __name__ == '__main__':
     elif cmd == 'new':
         nr = NewRoutine()
         print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
-        print(f"Efficiency score: {calculate_efficiency(nr)}")
+        # print(f"Efficiency score: {calculate_efficiency(nr)}")
  
         
