@@ -7,6 +7,7 @@ from prompt_toolkit.shortcuts import ProgressBar
 from rich.console import Console
 from prompt_toolkit.layout.dimension import D
 from blessed import Terminal
+import random
 from prompt_toolkit import Application
 from prompt_toolkit import Application
 from prompt_toolkit.buffer import Buffer
@@ -185,10 +186,38 @@ def main():
             thread1.join()
             thread2.join()
 
- 
+def check_columns(matrix):
+    # Transpose the matrix to iterate over columns
+    transposed_matrix = zip(*matrix)
+
+    for column in transposed_matrix:
+        # Convert column to set and check if all elements are the same
+        if len(set(column)) == 1:
+            return False
+
+    return True
+
+def check_and_shuffle(matrix):
+    # Transpose the matrix to iterate over columns
+    transposed_matrix = list(zip(*matrix[1:]))  # Exclude the first row (the days)
+
+    for i, column in enumerate(transposed_matrix):
+        # If all elements in the column are the same
+        if len(set(column)) == 1:
+            # Shuffle the tasks in the column
+            tasks = list(column)
+            random.shuffle(tasks)
+            # Update the tasks in the original matrix
+            for j, row in enumerate(matrix[1:]):
+                # Ensure that row has enough elements
+                while len(row) <= i+1:
+                    row.append(None)
+                row[i+1] = tasks[j]  # i+1 because the first element in each row is the time slot
+
+    return matrix
 import heapq
 
-def NewRoutine():
+def NewRoutine(task_priorities, slot_priorities):
     tasks = [] 
     slots = []
     days = []
@@ -233,6 +262,7 @@ def NewRoutine():
             row.append(task)
         matrix.append(row)
 
+    # matrix = check_and_shuffle(matrix)
     # Print the matrix
     for row in matrix:
         print('\t'.join(str(element) for element in row))
@@ -242,7 +272,7 @@ def NewRoutine():
 def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
     priority_matrix = []
     for i, row in enumerate(matrix):
-        if i == 0:  # Skip the first row (the days)
+        if i == 0:  # Skip the first row (the days)qqqqq
             continue
         priority_row = [row[0]]  # Copy the time slot
         for task in row[1:]:
@@ -258,30 +288,21 @@ def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
 
 import numpy as np
 
-def calculate_efficiency(routine):
-    # Map tasks to numerical values
-    task_mapping = {}
-    numerical_routine = []
-    numerical_value = 1
-
-    for row in routine[1:]:
-        numerical_row = []
-        for task in row[1:]:
-            if task not in task_mapping:
-                task_mapping[task] = numerical_value
-                numerical_value += 1
-            numerical_row.append(task_mapping[task])
-        numerical_routine.append(numerical_row)
-
+def calculate_efficiency(routine, task_priorities, slot_priorities):
     # Convert routine matrix to numpy array
-    routine_matrix = np.array(numerical_routine)
+    routine_matrix = np.array([row[1:] for row in routine])
 
-    # Perform Singular Value Decomposition
-    U, sigma, Vt = np.linalg.svd(routine_matrix)
+    # Extract task and slot priorities in the correct order
+    task_priorities_list = [task_priorities[task] for row in routine for task in row[1:]]
+    slot_priorities_list = [slot_priorities[row[0]] for row in routine]
 
-    # Calculate efficiency score (example metric: sum of singular values)
-    efficiency_score = np.sum(sigma)
+    # Convert task priorities and slot priorities to numpy arrays
+    task_priorities_vector = np.array(task_priorities_list)
+    slot_priorities_vector = np.array(slot_priorities_list)
 
+    # Compute efficiency score using linear algebra operations
+    efficiency_score = np.sum(np.dot(routine_matrix, task_priorities_vector) * slot_priorities_vector)
+    
     return efficiency_score
 
 if __name__ == '__main__':
@@ -293,8 +314,8 @@ if __name__ == '__main__':
     if cmd == "exit":
         exit()
     elif cmd == 'new':
-        nr = NewRoutine()
+        nr = NewRoutine(1,2)
         print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
-        # print(f"Efficiency score: {calculate_efficiency(nr)}")
+        # print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
  
         
