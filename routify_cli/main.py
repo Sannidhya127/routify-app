@@ -84,41 +84,6 @@ def run_screen():
 #     time.sleep(1)  # time consuming code
 
 # Function decorator:
-def login(cred):
-   log_dat = cred.split(' ')
-    # Check if user.json exists
-   if not os.path.exists('user.json'):
-        # If not, create it and write default user data
-        with open('user.json', 'w') as file:
-            user_data = {
-                'username': f'{log_dat[1]}',
-                'email': f'{log_dat[2]}',
-                'log' : True
-            }
-            json.dump(user_data, file)
-   else:
-        # If it exists, open it and check the user data
-        with open('user.json', 'r') as file:
-            user_data = json.load(file)
-            if 'username' not in user_data or 'email' not in user_data or 'type' not in user_data:
-                # If username or email is missing, write them
-                user_data['username'] = f'{log_dat[1]}'
-                user_data['email'] = f'{log_dat[2]}'
-                user_data['log'] = True
-                with open('user.json', 'w') as file:
-                    json.dump(user_data, file)
-
-# @yaspin(text="...")
-def CheckLogin():
-    if not os.path.exists('user.json'):
-        print_formatted_text(HTML('<b>Not logged in</b>'))
-        return False
-    else:
-        with open('user.json', 'r') as file:
-            user_data = json.load(file)
-            print_formatted_text(HTML(f'<b>Logged in as {user_data["username"]} with email {user_data["email"]}</b>'))
-
-        return True
 
 def MainWin():
 
@@ -158,10 +123,6 @@ def PromptSegment(term):
             cmd = Prompt.ask(f"{fg('green_1')}Routify>> {attr(0)}")
             if cmd == "exit":
                 exit()
-            elif cmd == "r --login":
-                CheckLogin()
-            elif cmd[0::5] == 'login':
-                login(cmd)
             elif cmd == "r --new":
                 pass
 
@@ -368,48 +329,9 @@ def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
     return priority_matrix
 
 
-import numpy as np
 
-def calculate_efficiency(routine, task_priorities, slot_priorities):
-    # Initialize efficiency score
-    efficiency_score = 0
 
-    # Create a set to store the task-slot combinations that have been counted
-    counted_combinations = set()
 
-    # Iterate over each row in the routine
-    for row in routine:
-        # Get the slot priority
-        slot_priority = slot_priorities.get(row[0], 0)
-
-        # Iterate over each task in the row
-        for task in row[1:]:
-            # Get the task priority
-            task_priority = task_priorities.get(task, 0)
-
-            # Create a tuple representing the task-slot combination
-            combination = (task, row[0])
-
-            # Check if the combination has already been counted
-            if combination not in counted_combinations:
-                # Add the product of the task priority and the slot priority to the efficiency score
-                efficiency_score += task_priority * slot_priority
-
-                # Add the combination to the set of counted combinations
-                counted_combinations.add(combination)
-
-    return efficiency_score
-
-def calculate_max_efficiency(task_priorities, slot_priorities):
-    # Get the maximum task priority and the maximum slot priority
-    max_task_priority = max(task_priorities.values())
-    max_slot_priority = max(slot_priorities.values())
-
-    # The maximum possible score is the product of the maximum task priority, the maximum slot priority, 
-    # and the minimum between the number of tasks and the number of slots
-    max_efficiency_score = max_task_priority * max_slot_priority * min(len(task_priorities), len(slot_priorities))
-
-    return max_efficiency_score
 if __name__ == '__main__':
     # Splash Screen launched
     Screen.wrapper(splash_screen)
@@ -420,14 +342,4 @@ if __name__ == '__main__':
         exit()
     elif cmd == 'new':
         nr = VeryNewRoutine(1,2)
-        # print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
-        # print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
-        # print(f'Maximum possible efficiency score: {calculate_max_efficiency(nr[1], nr[2])}')
-        # print(f"Efficiency percentage: {calculate_efficiency(nr[0], nr[1], nr[2]) / calculate_max_efficiency(nr[1], nr[2]) * 100:.2f}%")
-        # efficiency_score = calculate_efficiency(nr[0], nr[1], nr[2])
-        # max_efficiency_score = calculate_max_efficiency(nr[1], nr[2])
-        # normalized_efficiency_score = efficiency_score / max_efficiency_score
-        # normalized_efficiency_score = efficiency_score / max_efficiency_score
-        # print(f"Efficiency score: {efficiency_score}")
-        # print(f"Normalized efficiency score: {normalized_efficiency_score}")
         
