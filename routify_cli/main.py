@@ -5,6 +5,7 @@ from prompt_toolkit.layout import HSplit, VSplit, Layout
 from prompt_toolkit import Application
 from prompt_toolkit.shortcuts import ProgressBar
 from rich.console import Console
+from collections import deque
 from prompt_toolkit.layout.dimension import D
 from blessed import Terminal
 import random
@@ -249,25 +250,106 @@ def NewRoutine(task_priorities, slot_priorities):
     print(f"Received day data: {days}")
     
     # Create the matrix
-    
+    remaining_tasks = [(priority, task) for task, priority in original_tasks]
     matrix = [['0'] + days]
     while slots:
         slot_priority, slot = heapq.heappop(slots)  # Pop slot with highest priority
         row = [slot]
         for _ in days:
-            if not tasks:  # Check if there are no tasks left
-                tasks = list(original_tasks)  # Re-heapify tasks from the original list
+            if not tasks and remaining_tasks:  # Check if there are no tasks left and there are remaining tasks
+                tasks = [(priority, task) for task, priority in remaining_tasks]  # Re-populate tasks from remaining tasks
+                random.shuffle(tasks)  # Shuffle the tasks
                 heapq.heapify(tasks)
-            task_priority, task = heapq.heappop(tasks)  # Pop task with highest priority
-            row.append(task)
+                remaining_tasks = []  # Clear remaining tasks
+            if tasks:  # Check if there are tasks left
+                task_priority, task = heapq.heappop(tasks)  # Pop task with highest priority from tasks
+                row.append(task)  # Append only the task, not the entire tuple
+            else:
+                row.append(None)  # Append None if there are no tasks left
         matrix.append(row)
-
     # matrix = check_and_shuffle(matrix)
     # Print the matrix
     for row in matrix:
         print('\t'.join(str(element) for element in row))
     
     return matrix, tp, sp
+
+
+
+def VeryNewRoutine(task_priorities, slot_priorities):
+    tasks = [] 
+    slots = []
+    days = []
+    tp = {}
+    sp = {}
+    
+    # Input tasks and priorities
+    no_sub = int(input("Enter the number of tasks: "))
+    for i in range(no_sub):
+        task = input(f"Enter task {i+1}: ")
+        task_priority = int(input(f"Enter priority for task {i+1}: "))
+        tasks.append((-task_priority, task))
+        if task_priority not in tp:
+            tp[task] = task_priority # Store tasks as (-priority, task)
+    
+    original_tasks = list(tasks)  # Keep a copy of the original tasks list
+    heapq.heapify(tasks)  # Turn tasks list into a heap
+    print(f"Received task data: {tasks}")
+    
+    # Input time slots and priorities
+    t_slot_n = int(input("Enter the number of time slots: "))
+    for i in range(t_slot_n):
+        slot = input(f"Enter time slot {i+1}: ")
+        slot_priority = int(input(f"Enter priority for slot {i+1}: "))
+        slots.append((-slot_priority, slot))  # Store slots as (-priority, slot)
+        if slot_priority not in sp:
+            sp[slot] = slot_priority
+    heapq.heapify(slots)  # Turn slots list into a heap
+    print(f"Received time slot data: {slots}")
+    
+    # Input days
+    n_days = int(input("Enter the number of days: "))
+    for i in range(n_days):
+        day = input(f"Enter day {i+1}: ")
+        days.append(day)
+    print(f"Received day data: {days}")
+    
+    # Shuffle tasks and days to avoid repetition
+    original_tasks = list(tasks)
+
+    # Create a heap from the slots and tasks
+    heapq.heapify(slots)
+    heapq.heapify(tasks)
+
+    # Shuffle the days
+    random.shuffle(days)
+
+    # Create the routine matrix
+    matrix = [['0'] + days]
+
+    # Create a queue of tasks
+    task_queue = deque(original_tasks)
+
+    # Assign tasks to days for each set of slots
+    while slots:
+        slot_priority, slot = heapq.heappop(slots)  # Pop slot with highest priority
+        row = [slot]
+        for _ in days:
+            if not task_queue:  # If the task queue is empty
+                task_queue = deque(original_tasks)  # Re-populate the task queue
+                random.shuffle(task_queue)  # Shuffle the task queue
+            task_priority, task = task_queue.popleft()  # Remove the next task from the front of the queue
+            row.append(task)  # Append the task to the row
+        matrix.append(row)
+
+    for row in matrix:
+        print('\t'.join(str(element) for element in row))
+
+    return matrix, tp, sp
+
+
+
+
 
 def convert_to_priority_matrix(matrix, task_priorities, slot_priorities):
     priority_matrix = []
@@ -317,6 +399,7 @@ def calculate_efficiency(routine, task_priorities, slot_priorities):
                 counted_combinations.add(combination)
 
     return efficiency_score
+
 def calculate_max_efficiency(task_priorities, slot_priorities):
     # Get the maximum task priority and the maximum slot priority
     max_task_priority = max(task_priorities.values())
@@ -336,15 +419,15 @@ if __name__ == '__main__':
     if cmd == "exit":
         exit()
     elif cmd == 'new':
-        nr = NewRoutine(1,2)
-        print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
-        print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
-        print(f'Maximum possible efficiency score: {calculate_max_efficiency(nr[1], nr[2])}')
-        print(f"Efficiency percentage: {calculate_efficiency(nr[0], nr[1], nr[2]) / calculate_max_efficiency(nr[1], nr[2]) * 100:.2f}%")
-        efficiency_score = calculate_efficiency(nr[0], nr[1], nr[2])
-        max_efficiency_score = calculate_max_efficiency(nr[1], nr[2])
-        normalized_efficiency_score = efficiency_score / max_efficiency_score
-        normalized_efficiency_score = efficiency_score / max_efficiency_score
-        print(f"Efficiency score: {efficiency_score}")
-        print(f"Normalized efficiency score: {normalized_efficiency_score}")
+        nr = VeryNewRoutine(1,2)
+        # print(convert_to_priority_matrix(nr[0], nr[1], nr[2]))
+        # print(f"Efficiency score: {calculate_efficiency(nr[0], nr[1], nr[2])}")
+        # print(f'Maximum possible efficiency score: {calculate_max_efficiency(nr[1], nr[2])}')
+        # print(f"Efficiency percentage: {calculate_efficiency(nr[0], nr[1], nr[2]) / calculate_max_efficiency(nr[1], nr[2]) * 100:.2f}%")
+        # efficiency_score = calculate_efficiency(nr[0], nr[1], nr[2])
+        # max_efficiency_score = calculate_max_efficiency(nr[1], nr[2])
+        # normalized_efficiency_score = efficiency_score / max_efficiency_score
+        # normalized_efficiency_score = efficiency_score / max_efficiency_score
+        # print(f"Efficiency score: {efficiency_score}")
+        # print(f"Normalized efficiency score: {normalized_efficiency_score}")
         
