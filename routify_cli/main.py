@@ -18,6 +18,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout import HSplit, VSplit, Layout
 from prompt_toolkit.widgets import TextArea
 from prompt_toolkit.buffer import Buffer
+from tabulate import tabulate
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.containers import Window
 from prompt_toolkit.layout.dimension import D
@@ -179,61 +180,6 @@ def check_and_shuffle(matrix):
     return matrix
 import heapq
 
-def NewRoutine(task_priorities, slot_priorities):
-    tasks = [] 
-    slots = []
-    days = []
-    tp = {}
-    sp = {}
-    no_sub = int(input("Enter the number of tasks: "))
-    for i in range(no_sub):
-        task = input(f"Enter task {i+1}: ")
-        task_priority = int(input(f"Enter priority for task {i+1}: "))
-        tasks.append((-task_priority, task))
-        if task_priority not in tp:
-            tp[task] = task_priority # Store tasks as (-priority, task)
-    original_tasks = list(tasks)  # Keep a copy of the original tasks list
-    heapq.heapify(tasks)  # Turn tasks list into a heap
-    print(f"Received task data: {tasks}")
-    t_slot_n = int(input("Enter the number of time slots: "))
-    for i in range(t_slot_n):
-        slot = input(f"Enter time slot {i+1}: ")
-        slot_priority = int(input(f"Enter priority for slot {i+1}: "))
-        slots.append((-slot_priority, slot))  # Store slots as (-priority, slot)
-        if slot_priority not in sp:
-            sp[slot] = slot_priority
-    heapq.heapify(slots)  # Turn slots list into a heap
-    print(f"Received time slot data: {slots}")
-    n_days = int(input("Enter the number of days: "))
-    for i in range(n_days):
-        day = input(f"Enter day {i+1}: ")
-        days.append(day)
-    print(f"Received day data: {days}")
-    
-    # Create the matrix
-    remaining_tasks = [(priority, task) for task, priority in original_tasks]
-    matrix = [['0'] + days]
-    while slots:
-        slot_priority, slot = heapq.heappop(slots)  # Pop slot with highest priority
-        row = [slot]
-        for _ in days:
-            if not tasks and remaining_tasks:  # Check if there are no tasks left and there are remaining tasks
-                tasks = [(priority, task) for task, priority in remaining_tasks]  # Re-populate tasks from remaining tasks
-                random.shuffle(tasks)  # Shuffle the tasks
-                heapq.heapify(tasks)
-                remaining_tasks = []  # Clear remaining tasks
-            if tasks:  # Check if there are tasks left
-                task_priority, task = heapq.heappop(tasks)  # Pop task with highest priority from tasks
-                row.append(task)  # Append only the task, not the entire tuple
-            else:
-                row.append(None)  # Append None if there are no tasks left
-        matrix.append(row)
-    # matrix = check_and_shuffle(matrix)
-    # Print the matrix
-    for row in matrix:
-        print('\t'.join(str(element) for element in row))
-    
-    return matrix, tp, sp
 
 
 
@@ -303,9 +249,9 @@ def VeryNewRoutine(task_priorities, slot_priorities):
             row.append(task)  # Append the task to the row
         matrix.append(row)
 
-    for row in matrix:
-        print('\t'.join(str(element) for element in row))
-
+    # for row in matrix:
+    #     print('\t'.join(str(element) for element in row))
+    print(tabulate(matrix, headers="firstrow", tablefmt="grid"))
     return matrix, tp, sp
 
 
@@ -337,9 +283,12 @@ if __name__ == '__main__':
     Screen.wrapper(splash_screen)
     term = Terminal()
     main()
-    cmd = input("routify>> ")
-    if cmd == "exit":
-        exit()
-    elif cmd == 'new':
-        nr = VeryNewRoutine(1,2)
+    while True:
+        cmd = input("routify>> ")
+        if cmd == "exit":
+            exit()
+        elif cmd == 'new':
+            nr = VeryNewRoutine(1,2)
+        else:
+            print("invalid command")
         
