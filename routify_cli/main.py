@@ -86,22 +86,6 @@ def run_screen():
 
 # Function decorator:
 
-def MainWin():
-
-    if CheckLogin():
-        pass
-    else:
-        name = Prompt.ask("Enter your name", default="Paul Atreides")
-        email = Prompt.ask("Enter your email", default="Paul Atreides")
-        # name = input("Enter your name")
-        # email = input("Enter your email")
-        login(name, email)
-    while True:
-        cmd = Prompt.ask("Routify>> ")
-        if cmd == 'exit':
-            break
-        else:
-            print_formatted_text(HTML(f'<b>Command {cmd} not found</b>'))
 
 def print_ascii_art():
     ascii_art = f"""{fg('red_1')}
@@ -183,7 +167,7 @@ import heapq
 
 
 
-def VeryNewRoutine(task_priorities, slot_priorities):
+def NewRoutine(task_priorities, slot_priorities):
     tasks = [] 
     slots = []
     days = []
@@ -288,7 +272,7 @@ if __name__ == '__main__':
         if cmd == "exit":
             exit()
         elif cmd == 'new':
-            nr = VeryNewRoutine(1,2)
+            nr = NewRoutine(1,2)
         else:
             print("invalid command")
         
