@@ -1,5 +1,52 @@
 import customtkinter
 import heapq
+import tkinter as tk
+from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+import sys
+from tkinter import simpledialog
+import random
+from collections import deque
+from tabulate import tabulate
+
+class MultiInputDialog(simpledialog.Dialog):
+    def body(self, master):
+        tk.Label(master, text="Task:").grid(row=0)
+        tk.Label(master, text="Priority:").grid(row=1)
+
+        self.e1 = tk.Entry(master)
+        self.e2 = tk.Entry(master)
+
+        self.e1.grid(row=0, column=1)
+        self.e2.grid(row=1, column=1)
+
+        return self.e1  # initial focus
+
+    def apply(self):
+        self.task = self.e1.get()
+        self.priority = self.e2.get()
+
+
+
+class TableWidget(QWidget):
+    def __init__(self, table_data, parent=None):
+        super(TableWidget, self).__init__(parent)
+        self.table_data = table_data
+        self.initUI()
+        self.resize(800, 600)
+    def initUI(self):
+        self.layout = QVBoxLayout()
+        self.table = QTableWidget()
+        self.table.setRowCount(len(self.table_data))
+        self.table.setColumnCount(len(self.table_data[0]))
+
+        for i, row in enumerate(self.table_data):
+            for j, cell in enumerate(row):
+                self.table.setItem(i, j, QTableWidgetItem(str(cell)))
+
+        # self.table.setStyleSheet("background-color: #2b2b2b; color: #ffffff;")
+        self.layout.addWidget(self.table)
+        self.setLayout(self.layout)
+
 
 class Routify(customtkinter.CTk):
     def __init__(self):
@@ -13,7 +60,7 @@ class Routify(customtkinter.CTk):
         self.sp = {}
 
         self.title("Routify")
-        self.geometry(f"{1368}x{800}")
+        self.geometry(f"{1100}x{580}")
 
         # configure grid layout (4x4)
         self.grid_columnconfigure(1, weight=1)
@@ -34,7 +81,10 @@ class Routify(customtkinter.CTk):
 
         self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, text="New",command=self.NewRoutine)
         self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+        
 
+        self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, text="Help", command=self.Help)
+        self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
 
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
@@ -48,8 +98,6 @@ class Routify(customtkinter.CTk):
                                                                command=self.change_scaling_event)
         self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
 
-        # self.entry = customtkinter.CTkEntry(self, placeholder_text="CTkEntry")
-        # self.entry.grid(row=3, column=1, columnspan=2, padx=(20, 0), pady=(20, 20), sticky="nsew")
         
 
     def clear_frame(self):
@@ -61,26 +109,26 @@ class Routify(customtkinter.CTk):
     def NewRoutine(self):
         self.clear_frame()
 
-        self.add_task_button = customtkinter.CTkButton(self.central_label, text="Add Task", command=self.AddTask, hover_color="dark blue")
-        self.add_task_button.grid(row=1, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
 
-        self.add_slot_button = customtkinter.CTkButton(self.central_label, text="Add Slot", command=self.AddSlot)
-        self.add_slot_button.grid(row=2, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
 
-        self.add_days_button = customtkinter.CTkButton(self.central_label, text="Add Days", command=self.AddDays, hover_color="dark blue")
-        self.add_days_button.grid(row=3, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
+        self.add_task_button = customtkinter.CTkButton(self.central_label, text="Add Task", command=self.AddTask, hover_color="dark blue", corner_radius=50, anchor="center")
+        self.add_task_button.grid(row=1, column=0, padx = (400,400), pady=(20, 0))
 
-        self.add_routine_button = customtkinter.CTkButton(self.central_label, text="Generate Routine", command=self.CreateRoutine, hover_color="dark blue")
-        self.add_routine_button.grid(row=3, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
+        self.add_slot_button = customtkinter.CTkButton(self.central_label, text="Add Slot", command=self.AddSlot, corner_radius=50)
+        self.add_slot_button.grid(row=2, column=0, pady=(20, 0))
+
+        self.add_days_button = customtkinter.CTkButton(self.central_label, text="Add Days", command=self.AddDays, hover_color="dark green", corner_radius=50)
+        self.add_days_button.grid(row=3, column=0,  pady=(20, 0))
+
+        self.add_routine_button = customtkinter.CTkButton(self.central_label, text="Generate Routine", command=self.CreateRoutine, hover_color="dark blue", corner_radius=50)
+        self.add_routine_button.grid(row=4, column=0,pady=(20, 0))
 
     def AddTask(self):
-        self.task_name = customtkinter.CTkEntry(self.central_label, placeholder_text="Enter Task Name")
-        self.task_name.grid(row=2, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
-
-        self.task_priority = customtkinter.CTkEntry(self.central_label, placeholder_text="Enter Task Priority")
-        self.task_priority.grid(row=3, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
-        task = self.task_name.get()
-        task_priority = self.task_priority.get()
+        self.task = customtkinter.CTkInputDialog(text="Type in a Task[SPACE]Priority:", title="Add Task")
+        taskArg = self.task.get_input()
+        args = taskArg.split(" ")
+        task = args[0]
+        task_priority = int(args[1])
         print(task_priority)
         self.tasks.append((-task_priority, task))
         if task_priority not in self.tp:
@@ -90,13 +138,11 @@ class Routify(customtkinter.CTk):
         
     def AddSlot(self):
 
-        self.slot_name = customtkinter.CTkEntry(self.central_label, placeholder_text="Enter Slot Name")
-        self.slot_name.grid(row=4, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
-
-        self.slot_priority = customtkinter.CTkEntry(self.central_label, placeholder_text="Enter Slot Priority")
-        self.slot_priority.grid(row=5, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
-        slot = self.slot_name.get()
-        slot_priority = int(self.slot_priority.get())
+        self.time = customtkinter.CTkInputDialog(text="Type in a Time Slot[SPACE]Priority:", title="Add Time Slot")
+        timeArg = self.time.get_input()
+        args = timeArg.split(" ")
+        slot = args[0]
+        slot_priority = int(args[1])
         self.slots.append((-slot_priority, slot))
         if slot_priority not in self.sp:
             self.sp[slot] = slot_priority
@@ -105,27 +151,69 @@ class Routify(customtkinter.CTk):
     
     def AddDays(self):
 
-        self.days = customtkinter.CTkEntry(self.central_label, placeholder_text="Enter Days with space")
-        self.days.grid(row=6, column=0, padx=(100, 500), pady=(10, 0), sticky="w")
-        day = self.days.get()
-        each_day = day.split(" ")
-        for i in each_day:
+        self.time = customtkinter.CTkInputDialog(text="Type in a name of Days", title="Add Days")
+        timeArg = self.time.get_input()
+        args = timeArg.split(" ")
+        for i in args:
             self.days.append(i)
 
 
     def CreateRoutine(self):
-        self.AddTask()
-        self.AddSlot()
-        self.AddDays()
-        return self.tasks, self.slots, self.days
+        original_tasks = list(self.tasks)
+
+    # Create a heap from the slots and tasks
+        heapq.heapify(self.slots)
+        heapq.heapify(self.tasks)
+
+        # Shuffle the days
+        random.shuffle(self.days)
+
+        # Create the routine matrix
+        matrix = [['0'] + self.days]
+
+        # Create a queue of tasks
+        task_queue = deque(original_tasks)
+
+        # Assign tasks to days for each set of slots
+        while self.slots:
+            slot_priority, slot = heapq.heappop(self.slots)  # Pop slot with highest priority
+            row = [slot]
+            for _ in self.days:
+                if not task_queue:  # If the task queue is empty
+                    task_queue = deque(original_tasks)  # Re-populate the task queue
+                    random.shuffle(task_queue)  # Shuffle the task queue
+                task_priority, task = task_queue.popleft()  # Remove the next task from the front of the queue
+                row.append(task)  # Append the task to the row
+            matrix.append(row)
+
+        # for row in matrix:
+        #     print('\t'.join(str(element) for element in row))
+
+        app = QApplication(sys.argv)
+        table_widget = TableWidget(matrix)
+        table_widget.show()
+        sys.exit(app.exec_())
+        print(tabulate(matrix, headers="firstrow", tablefmt="grid"))
+        return matrix, self.tp, self.sp
 
 
     def About(self):
-        abt = '''                                                   Hello User! Welcome to Routify, a simple and easy to use routine manager.
-                                                                                    I developed this simple optimizaton tool to help you manage your daily tasks and routines.
-                                                                    I hope you find it useful. Enjoy!'''
+        self.clear_frame()
 
-        self.central_label.configure(text=abt)
+    # Create a new CTkLabel widget with the desired text and formatting options
+        message_label = customtkinter.CTkLabel(self.central_label, text='''the prob is that it does not take in newline by itself, how to make it such that it starts from extreme left and when the sentence reaches the extreme right a new line is made and it continues that way. Do not use lang that gets filetered pls''', font=("Arial", 20), anchor="center", justify="center",  wraplength=self.central_label.winfo_height())
+
+        # Add the CTkLabel widget to the central_label frame and make it expand to fill the available space
+        message_label.pack(expand=True, fill="both")
+
+    def Help(self):
+        self.clear_frame()
+
+        # Create a new CTkLabel widget with the desired text and formatting options
+        message_label = customtkinter.CTkLabel(self.central_label, text="Task Added Successfully!", font=("Arial", 20))
+
+        # Add the CTkLabel widget to the central_label frame
+        message_label.pack()
 
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
