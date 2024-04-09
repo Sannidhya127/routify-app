@@ -8,6 +8,33 @@ from tkinter import simpledialog
 import random
 from collections import deque
 from tabulate import tabulate
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+
+def generate_pdf(matrix):
+    # Create a SimpleDocTemplate
+    doc = SimpleDocTemplate("routine.pdf", pagesize=letter)
+    # Create a Table with the matrix data
+    table = Table(matrix)
+    # Add a TableStyle
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ]))
+    # Build the PDF
+    elements = []
+    elements.append(table)
+    doc.build(elements)
+
 
 
 class ScrollFrame(customtkinter.CTkScrollableFrame):
@@ -234,6 +261,7 @@ class Routify(customtkinter.CTk):
 
         matrix = [list(row) for row in matrix]
 
+        generate_pdf(matrix)
         app = QApplication(sys.argv)
         table_widget = TableWidget(matrix)
         table_widget.show()
