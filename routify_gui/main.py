@@ -8,6 +8,15 @@ import random
 from collections import deque
 from tabulate import tabulate
 
+
+class ScrollFrame(customtkinter.CTkScrollableFrame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        # add widgets onto the frame...
+        self.label = customtkinter.CTkLabel(self)
+        self.label.grid(row=0, column=0, padx=20)
+
 class MultiInputDialog(simpledialog.Dialog):
     def body(self, master):
         tk.Label(master, text="Task:").grid(row=0)
@@ -109,20 +118,26 @@ class Routify(customtkinter.CTk):
     def NewRoutine(self):
         self.clear_frame()
 
+        self.central_label.grid_columnconfigure(0, weight=1)
+        self.central_label.grid_columnconfigure(1, weight=1)
 
+        left_frame = customtkinter.CTkFrame(self.central_label, width=140, corner_radius=0)
+        left_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.add_task_button = customtkinter.CTkButton(self.central_label, text="Add Task", command=self.AddTask, hover_color="dark blue", corner_radius=50, anchor="center")
+        self.add_task_button = customtkinter.CTkButton(left_frame, text="Add Task", command=self.AddTask, hover_color="dark blue", corner_radius=50, anchor="center")
         self.add_task_button.grid(row=1, column=0, padx = (400,400), pady=(20, 0))
 
-        self.add_slot_button = customtkinter.CTkButton(self.central_label, text="Add Slot", command=self.AddSlot, corner_radius=50)
+        self.add_slot_button = customtkinter.CTkButton(left_frame, text="Add Slot", command=self.AddSlot, corner_radius=50)
         self.add_slot_button.grid(row=2, column=0, pady=(20, 0))
 
-        self.add_days_button = customtkinter.CTkButton(self.central_label, text="Add Days", command=self.AddDays, hover_color="dark green", corner_radius=50)
+        self.add_days_button = customtkinter.CTkButton(left_frame, text="Add Days", command=self.AddDays, hover_color="dark green", corner_radius=50)
         self.add_days_button.grid(row=3, column=0,  pady=(20, 0))
 
-        self.add_routine_button = customtkinter.CTkButton(self.central_label, text="Generate Routine", command=self.CreateRoutine, hover_color="dark blue", corner_radius=50)
+        self.add_routine_button = customtkinter.CTkButton(left_frame, text="Generate Routine", command=self.CreateRoutine, hover_color="dark blue", corner_radius=50)
         self.add_routine_button.grid(row=4, column=0,pady=(20, 0))
-
+        self.scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="New Routine", label_font=("Copperplate Gothic Bold", 20))
+        self.scrollable_frame.grid(row=1, column=3, padx=(20, 30), pady=(20, 0), sticky="nsew")
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
     def AddTask(self):
         self.task = customtkinter.CTkInputDialog(text="Type in a Task[SPACE]Priority:", title="Add Task")
         taskArg = self.task.get_input()
@@ -135,7 +150,8 @@ class Routify(customtkinter.CTk):
             self.tp[task] = task_priority
         heapq.heapify(self.tasks)
         self.original_tasks = list(self.tasks)
-        
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {task} with priority: {task_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label.pack(expand=True, fill="both")
     def AddSlot(self):
 
         self.time = customtkinter.CTkInputDialog(text="Type in a Time Slot[SPACE]Priority:", title="Add Time Slot")
