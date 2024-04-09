@@ -3,6 +3,7 @@ import heapq
 import tkinter as tk
 from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 import sys
+import numpy as np
 from tkinter import simpledialog
 import random
 from collections import deque
@@ -134,8 +135,12 @@ class Routify(customtkinter.CTk):
         self.add_days_button.grid(row=3, column=0,  pady=(20, 0))
 
         self.add_routine_button = customtkinter.CTkButton(left_frame, text="Generate Routine", command=self.CreateRoutine, hover_color="dark blue", corner_radius=50)
-        self.add_routine_button.grid(row=4, column=0,pady=(20, 0))
+        self.add_routine_button.grid(row=5, column=0,pady=(20, 0))
         self.scrollable_frame = customtkinter.CTkScrollableFrame(self, label_text="New Routine", label_font=("Copperplate Gothic Bold", 20))
+
+        self.remove_entry = customtkinter.CTkButton(left_frame, text="Remove Entry", command=self.remove_entry, hover_color="dark blue", corner_radius=50)
+        self.remove_entry.grid(row=4, column=0,pady=(20, 0))
+
         self.scrollable_frame.grid(row=1, column=3, padx=(20, 30), pady=(20, 0), sticky="nsew")
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
     def AddTask(self):
@@ -163,7 +168,8 @@ class Routify(customtkinter.CTk):
         if slot_priority not in self.sp:
             self.sp[slot] = slot_priority
         heapq.heapify(self.slots)
-
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {slot} with priority: {slot_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label.pack(expand=True, fill="both")
     
     def AddDays(self):
 
@@ -172,27 +178,51 @@ class Routify(customtkinter.CTk):
         args = timeArg.split(" ")
         for i in args:
             self.days.append(i)
-
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {args}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label.pack(expand=True, fill="both")
+    def remove_entry(self):
+        self.time = customtkinter.CTkInputDialog(text="Type in a entry type-entry name-entry priority to remove it:", title="Delete Entry")
+        timeArg = self.time.get_input()
+        args = timeArg.split("-")
+        if args[0] == "task":
+            task_to_remove = (-int(args[2]), args[1])
+            if task_to_remove in self.tasks:
+                self.tasks.remove(task_to_remove)
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label.pack(expand=True, fill="both")
+        elif args[0] == "slot":
+            task_to_remove = (-int(args[2]), args[1])
+            if task_to_remove in self.slots:
+                self.tasks.remove(task_to_remove)
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label.pack(expand=True, fill="both")
+        elif args[0] == "day":
+            task_to_remove = (-int(args[2]), args[1])
+            if task_to_remove in self.days:
+                self.tasks.remove(task_to_remove)
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label.pack(expand=True, fill="both")
 
     def CreateRoutine(self):
         original_tasks = list(self.tasks)
 
     # Create a heap from the slots and tasks
-        heapq.heapify(self.slots)
+        # heapq.heapify(self.slots)
         heapq.heapify(self.tasks)
 
         # Shuffle the days
-        random.shuffle(self.days)
+        # random.shuffle(self.days)
 
         # Create the routine matrix
         matrix = [['0'] + self.days]
 
         # Create a queue of tasks
         task_queue = deque(original_tasks)
+        slot_queue = deque(self.slots)
 
         # Assign tasks to days for each set of slots
-        while self.slots:
-            slot_priority, slot = heapq.heappop(self.slots)  # Pop slot with highest priority
+        while slot_queue:
+            slot_priority, slot = slot_queue.popleft()  # Pop slot from the front of the queue
             row = [slot]
             for _ in self.days:
                 if not task_queue:  # If the task queue is empty
@@ -202,8 +232,7 @@ class Routify(customtkinter.CTk):
                 row.append(task)  # Append the task to the row
             matrix.append(row)
 
-        # for row in matrix:
-        #     print('\t'.join(str(element) for element in row))
+        matrix = [list(row) for row in matrix]
 
         app = QApplication(sys.argv)
         table_widget = TableWidget(matrix)
