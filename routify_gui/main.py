@@ -19,7 +19,7 @@ def generate_pdf(matrix):
     table = Table(matrix)
     # Add a TableStyle
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
 
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -27,8 +27,8 @@ def generate_pdf(matrix):
         ('FONTSIZE', (0, 0), (-1, 0), 14),
 
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0,0), (-1,-1), 1, colors.black)
+        ('BACKGROUND', (0, 1), (-1, -1), colors.grey),
+        ('GRID', (0,0), (-1,-1), 1, colors.white)
     ]))
     # Build the PDF
     elements = []
@@ -134,7 +134,8 @@ class Routify(customtkinter.CTk):
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["80%", "90%", "100%", "110%", "120%"],
                                                                command=self.change_scaling_event)
         self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
-
+        self.textbox = customtkinter.CTkTextbox(self, width=250)
+        self.textbox.grid(row=0, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
         
 
     def clear_frame(self):
@@ -182,7 +183,7 @@ class Routify(customtkinter.CTk):
             self.tp[task] = task_priority
         heapq.heapify(self.tasks)
         self.original_tasks = list(self.tasks)
-        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {task} with priority: {task_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added task '{task}' with priority: {task_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
         task_label.pack(expand=True, fill="both")
     def AddSlot(self):
 
@@ -195,7 +196,7 @@ class Routify(customtkinter.CTk):
         if slot_priority not in self.sp:
             self.sp[slot] = slot_priority
         heapq.heapify(self.slots)
-        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {slot} with priority: {slot_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added time '{slot}' with priority: {slot_priority}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
         task_label.pack(expand=True, fill="both")
     
     def AddDays(self):
@@ -205,7 +206,7 @@ class Routify(customtkinter.CTk):
         args = timeArg.split(" ")
         for i in args:
             self.days.append(i)
-        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added {args}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+        task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Added Day'{args}'", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
         task_label.pack(expand=True, fill="both")
     def remove_entry(self):
         self.time = customtkinter.CTkInputDialog(text="Type in a entry type-entry name-entry priority to remove it:", title="Delete Entry")
@@ -215,47 +216,48 @@ class Routify(customtkinter.CTk):
             task_to_remove = (-int(args[2]), args[1])
             if task_to_remove in self.tasks:
                 self.tasks.remove(task_to_remove)
-                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed '{args[1]}' with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
                 task_label.pack(expand=True, fill="both")
         elif args[0] == "slot":
             task_to_remove = (-int(args[2]), args[1])
             if task_to_remove in self.slots:
                 self.tasks.remove(task_to_remove)
-                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed '{args[1]} 'with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
                 task_label.pack(expand=True, fill="both")
         elif args[0] == "day":
             task_to_remove = (-int(args[2]), args[1])
             if task_to_remove in self.days:
                 self.tasks.remove(task_to_remove)
-                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed {args[1]} with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
+                task_label = customtkinter.CTkLabel(self.scrollable_frame, text=f"Removed '{args[1]}' with priority: {args[2]}", font=("Courier New", 20), anchor="center", justify="center", wraplength=self.scrollable_frame.winfo_width())
                 task_label.pack(expand=True, fill="both")
 
     def CreateRoutine(self):
-        original_tasks = list(self.tasks)
+        original_tasks = [(priority*-1, task) for priority, task in self.tasks]
 
-    # Create a heap from the slots and tasks
-        # heapq.heapify(self.slots)
-        heapq.heapify(self.tasks)
+        # Create a heap from the tasks
+        heapq.heapify(original_tasks)
 
-        # Shuffle the days
-        # random.shuffle(self.days)
+        # Create a heap from the slots
+        original_slots = [(priority*-1, slot) for priority, slot in self.slots]
+        heapq.heapify(original_slots)
 
         # Create the routine matrix
         matrix = [['0'] + self.days]
 
         # Create a queue of tasks
         task_queue = deque(original_tasks)
-        slot_queue = deque(self.slots)
 
-        # Assign tasks to days for each set of slots
-        while slot_queue:
-            slot_priority, slot = slot_queue.popleft()  # Pop slot from the front of the queue
+        # Assign tasks to days for each slot
+        while original_slots:
+            slot_priority, slot = heapq.heappop(original_slots)  # Pop largest slot from the heap
+            slot_priority *= -1  # Revert the priority back to its original value
             row = [slot]
             for _ in self.days:
                 if not task_queue:  # If the task queue is empty
                     task_queue = deque(original_tasks)  # Re-populate the task queue
                     random.shuffle(task_queue)  # Shuffle the task queue
                 task_priority, task = task_queue.popleft()  # Remove the next task from the front of the queue
+                task_priority *= -1  # Revert the priority back to its original value
                 row.append(task)  # Append the task to the row
             matrix.append(row)
 
@@ -266,27 +268,23 @@ class Routify(customtkinter.CTk):
         table_widget = TableWidget(matrix)
         table_widget.show()
         sys.exit(app.exec_())
-        print(tabulate(matrix, headers="firstrow", tablefmt="grid"))
-        return matrix, self.tp, self.sp
 
 
+
+ 
     def About(self):
         self.clear_frame()
 
-    # Create a new CTkLabel widget with the desired text and formatting options
-        message_label = customtkinter.CTkLabel(self.central_label, text='''the prob is that it does not take in newline by itself, how to make it such that it starts from extreme left and when the sentence reaches the extreme right a new line is made and it continues that way. Do not use lang that gets filetered pls''', font=("Arial", 20), anchor="center", justify="center",  wraplength=self.central_label.winfo_height())
+        self.textbox.delete("1.0", "end")
 
-        # Add the CTkLabel widget to the central_label frame and make it expand to fill the available space
-        message_label.pack(expand=True, fill="both")
+        self.textbox.insert("0.0", "ABOUT\n\n" + 'Welcome to Routify. This is a simple optimized routine generation system that uses heap sort, priority queue and matrix optimization to generate a routine for you. \n\n + This is a simple GUI application that uses customtkinter library to create a simple GUI interface for the user to interact with the system. \n\n + This application was created by a team of developers who wanted to create a simple routine generation system that can be used by anyone to generate a routine for their daily tasks. \n\n + This application is open source and can be used by anyone to generate a routine for their daily tasks. \n\n + This application is free to use and can be downloaded from the GitHub repository. \n\n + Thank you for using Routify. We hope you find it useful. \n\n + For more information, please visit the GitHub repository. \n\n + Thank you. \n\n + The Routify Team.')
 
     def Help(self):
         self.clear_frame()
 
-        # Create a new CTkLabel widget with the desired text and formatting options
-        message_label = customtkinter.CTkLabel(self.central_label, text="Task Added Successfully!", font=("Arial", 20))
+        self.textbox.delete("1.0", "end")
 
-        # Add the CTkLabel widget to the central_label frame
-        message_label.pack()
+        self.textbox.insert("0.0", "HELP\n\n" + ' + To create a new routine click the New button on the sidebar. \n\n + To add a task, click the Add Task button and type in the task name and priority. \n\n + To add a time slot, click the Add Slot button and type in the time slot name and priority. \n\n + To add days, click the Add Days button and type in the name of the days. \n\n + To generate a routine, click the Generate Routine button. \n\n + To remove an entry, click the Remove Entry button and type in the entry type, entry name and entry priority. \n\n + The syntax for all inputs is [str][space][numeric value]\n\n + For more information, please visit the GitHub repository. \n\n + Thank you. \n\n + The Routify Team.')
 
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
