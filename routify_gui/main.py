@@ -17,13 +17,18 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from datetime import datetime
+from reportlab.lib.pagesizes import landscape
 
+# Convert screen size from pixels to points
+screen_width = 1920 * 72 / 96
+screen_height = 1080 * 72 / 96
+fullscreen_size = landscape((screen_width, screen_height))
 # Register a custom font
 pdfmetrics.registerFont(TTFont('Fancy', 'routify_gui/dcf.ttf'))
 
 def generate_pdf(matrix):
     # Create a SimpleDocTemplate
-    doc = SimpleDocTemplate(f"routine{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf", pagesize=letter)
+    doc = SimpleDocTemplate(f"routine{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf", pagesize=fullscreen_size)
     # Create a Table with the matrix data
     table = Table(matrix)
     # Add a TableStyle
